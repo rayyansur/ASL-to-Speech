@@ -17,7 +17,6 @@ model = LandmarkModel()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.load_state_dict(torch.load(MODEL_DIR, map_location=device))
 
-#labels = ['A','B','C','D', 'del', 'E','F','G','H','I','J','K','L','M','N', 'nothing', 'O','P','Q','R','S', 'space', 'T','U','V','W','X','Y','Z']
 labels = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','del','nothing','space']
 
 passCount = 0
