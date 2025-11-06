@@ -1,8 +1,8 @@
 import torch.nn as nn
 
-class LandmarkModel(nn.Module):
+class ASLMLP(nn.Module):
     def __init__(self, input_size=63, hidden_size=256, output_size=29):
-        super(LandmarkModel, self).__init__()
+        super(ASLMLP, self).__init__()
         self.net = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(),

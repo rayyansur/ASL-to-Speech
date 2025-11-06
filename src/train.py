@@ -4,7 +4,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-from model import LandmarkModel
+from model import ASLMLP
 
 CSV_PATH = "normalized_landmarks.csv"
 BATCH_SIZE = 256
@@ -29,7 +29,7 @@ dataset = ASLDataset(CSV_PATH)
 train_loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = LandmarkModel().to(device)
+model = ASLMLP().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LR)
 

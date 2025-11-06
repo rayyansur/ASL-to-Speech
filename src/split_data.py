@@ -24,7 +24,6 @@ def copy_files(file_list, dst_folder):
     for f in file_list:
         shutil.copy2(f, os.path.join(dst_folder, os.path.basename(f)))
 
-
 for c in classes:
     class_folder = os.path.join(DATASET_DIR, c)
     files = [os.path.join(class_folder, f) for f in os.listdir(class_folder)
@@ -34,11 +33,9 @@ for c in classes:
         print(f"Warning: no images for class {c}")
         continue
 
-    # First split train vs temp (val+test)
     train_files, temp_files = train_test_split(files, train_size=train_frac, random_state=42, shuffle=True,
                                                stratify=None)
 
-    # Now split temp into val and test with relative proportions
     if (val_frac + test_frac) > 0:
         rel_val = val_frac / (val_frac + test_frac)
         val_files, test_files = train_test_split(temp_files, train_size=rel_val, random_state=42, shuffle=True,
@@ -46,7 +43,6 @@ for c in classes:
     else:
         val_files, test_files = [], []
 
-    # destination folders per class
     train_dst = os.path.join(DEST_DIR, "train", c)
     val_dst = os.path.join(DEST_DIR, "val", c)
     test_dst = os.path.join(DEST_DIR, "test", c)

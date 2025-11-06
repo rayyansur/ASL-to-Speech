@@ -1,19 +1,15 @@
-import random
-
 import cv2
 import torch
 import mediapipe as mp
-import csv
 import os
-from model import LandmarkModel
-from normalize_landmarks import normalize
-import matplotlib.pyplot as plt
+from model import ASLMLP
+from extract_landmarks import extract_landmark
 
 mp_hands = mp.solutions.hands
 
 DATASET_DIR = "../data/asl_alphabet_split/test/"
 MODEL_DIR = "../model/asl_landmarks_model.pth"
-model = LandmarkModel()
+model = ASLMLP()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.load_state_dict(torch.load(MODEL_DIR, map_location=device))
 
@@ -31,32 +27,23 @@ with mp_hands.Hands(static_image_mode=True, max_num_hands=1) as hands:
             continue
         for img_path in os.listdir(label_path):
             img = cv2.imread(os.path.join(label_path, img_path))
-            if img is None:
-                continue
-            rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            rgb = cv2.convertScaleAbs(rgb, alpha=1.2, beta=20)
-
-            results = hands.process(rgb)
-            if results.multi_hand_landmarks == None:
-                if label == "nothing":
-                    passCount += 1
-                else:
-                    noCount += 1
-
-            if results.multi_hand_landmarks:
-                hand = results.multi_hand_landmarks[0]
-                coords = [(lm.x, lm.y, lm.z) for lm in hand.landmark]
-                norm_coords = normalize(coords)
-                input_tensor = torch.tensor(norm_coords, dtype=torch.float32).unsqueeze(0).to(device)
-                with torch.no_grad():
-                    pred = model.forward(input_tensor)
-                    labelOf = labels[pred.argmax().item()]
-
-
-                    if labelOf == label:
+            if img is not None:
+                norm_landmarks = extract_landmark(img)
+                if norm_landmarks is None:
+                    if label == "nothing":
                         passCount += 1
                     else:
-                        failCount += 1
+                        noCount += 1
+                else:
+                    input_tensor = torch.tensor(norm_landmarks, dtype=torch.float32).unsqueeze(0).to(device)
+                    with torch.no_grad():
+                        pred = model.forward(input_tensor)
+                        labelOf = labels[pred.argmax().item()]
+
+                        if labelOf == label:
+                            passCount += 1
+                        else:
+                            failCount += 1
 
     print(f"Fail count: {failCount}")
     print(f"Pass count: {passCount}")
