@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ASL Recognition</title>
+    <style>
+        body { background:#111; color:#fff; text-align:center; font-family:sans-serif; }
+        video { border:2px solid #00ffcc; border-radius:10px; width:480px; height:360px; margin-top:20px; }
+        h1 { color:#00ffcc; }
+        #prediction { font-size:2em; margin-top:10px; }
+    </style>
+</head>
+<body>
+<h1>ASL Recognition</h1>
+<video id="video" autoplay></video>
+<div id="prediction"></div>
+<div id="sentence"></div>
+
+<script>
+    const video = document.getElementById('video');
+    const predBox = document.getElementById('prediction');
+    let interval = parseFloat(localStorage.getItem('interval')) || 1;
+    let ttsEnabled = localStorage.getItem('tts') === 'true';
+
+    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        video.srcObject = stream;
+    });
+
+    function captureAndSend() {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        const base64 = dataUrl.split(',')[1];
+
+        fetch('/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64, tts: ttsEnabled })
+        })
+            .then(res => res.json())
+            .then(data => { predBox.textContent = data.sentence; })
+            .catch(err => console.error(err));
+    }
+
+    setInterval(captureAndSend, interval * 1000);
+</script>
+</body>
+</html>

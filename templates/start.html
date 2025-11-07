@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ASL Recognition Setup</title>
+    <style>
+        body { background:#111; color:white; text-align:center; font-family:sans-serif; margin-top:100px; }
+        input, button { font-size:1.2em; margin:10px; padding:8px 12px; border-radius:6px; border:none; }
+        label { font-size:1.1em; }
+        .toggle { cursor:pointer; }
+    </style>
+</head>
+<body>
+<h1>ASL Recognition Setup</h1>
+
+<label for="interval">Frame interval (seconds):</label>
+<input id="interval" type="number" value="1" min="0.1" step="0.1">
+
+<div>
+    <label for="enable_speech">Enable Voice:</label>
+    <input id="enable_speech" type="checkbox" checked class="toggle">
+</div>
+
+<button onclick="startApp()">Start</button>
+
+<script>
+    function startApp() {
+        const interval = document.getElementById('interval').value;
+        const tts = document.getElementById('enable_speech').checked;
+        localStorage.setItem('interval', interval);
+        localStorage.setItem('enable_speech', tts);
+        window.location.href = '/camera';
+    }
+</script>
+</body>
+</html>

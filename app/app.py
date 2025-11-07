@@ -1,13 +1,17 @@
+import threading
+
 import pyttsx3
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import torch
 import numpy as np
 import cv2, base64, os, sys
-
 from src.model import ASLMLP
 from src.extract_landmarks import extract_landmark
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "../templates")
+
+app = Flask(__name__, template_folder=TEMPLATE_DIR)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = ASLMLP()
@@ -17,12 +21,20 @@ model.eval().to(device)
 labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
           'W', 'X', 'Y', 'Z', 'del', 'nothing', 'space']
 
-engine = pyttsx3.init()
-engine.setProperty('rate', 150)
-engine.setProperty('volume', 1.0)
 
 nothing_count = 0
 stack = []
+
+
+def speak_text(text):
+    def _speak():
+        engine = pyttsx3.init()
+        engine.setProperty('rate', 150)
+        engine.setProperty('volume', 1.0)
+        engine.say(text)
+        engine.runAndWait()
+    threading.Thread(target=_speak, daemon=False).start()
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -33,13 +45,16 @@ def predict():
         img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
         landmarks = extract_landmark(img)
 
+        data = request.get_json()
+        speech_enable = data.get('speech_enable', True)
+
         if landmarks is None:
             nothing_count += 1
             print('NC:', nothing_count)
             if nothing_count >= 3:
                 print(stack)
-                engine.say(stack.__str__())
-                engine.runAndWait()
+                if speech_enable:
+                    speak_text("".join(stack))
                 stack.clear()
 
                 return jsonify({
@@ -64,6 +79,7 @@ def predict():
                 stack.append(label)
 
         return jsonify({
+            "sentence": "".join(stack),
             "prediction": label,
             "confidence": round(conf.item(), 3)
         })
@@ -72,9 +88,12 @@ def predict():
 
 
 @app.route('/')
-def home():
-    return "ASL backend is running!"
+def startup():
+    return render_template('start.html')
 
+@app.route('/camera/')
+def camera():
+    return render_template('camera.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
