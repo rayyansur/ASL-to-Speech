@@ -1,0 +1,21 @@
+# Core requirements
+flask
+requests
+numpy
+pandas
+scikit-learn
+torch
+torchvision
+
+# Computer Vision
+opencv-python
+mediapipe
+
+# Speech
+pyttsx3
+
+# Data handling
+kagglehub
+
+# Web + GUI
+pywebview
